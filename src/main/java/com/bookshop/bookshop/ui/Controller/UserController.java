@@ -7,7 +7,6 @@ import com.bookshop.bookshop.ui.models.request.UserDetailsRequestModel;
 import com.bookshop.bookshop.ui.models.response.ErrorMessages;
 import com.bookshop.bookshop.ui.models.response.UserRest;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +34,17 @@ public class UserController {
         UserDto userDto = modelMapper.map(userDetails, UserDto.class);
         UserDto createdUser = userService.createUser(userDto);
         UserRest returnValue = modelMapper.map(createdUser, UserRest.class);
+        return returnValue;
+    }
+
+    @PutMapping(path = "/{id}",
+            consumes = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_XML_VALUE, MediaType.APPLICATION_JSON_VALUE})
+    public UserRest updateUser(@PathVariable String id, @RequestBody UserDetailsRequestModel userDetails) {
+        ModelMapper modelMapper = new ModelMapper();
+        UserDto userDto = modelMapper.map(userDetails, UserDto.class);
+        UserDto updateUser = userService.updateUser(id, userDto);
+        UserRest returnValue = modelMapper.map(updateUser, UserRest.class);
         return returnValue;
     }
 }

@@ -7,8 +7,8 @@ import com.bookshop.bookshop.io.repository.UserRepository;
 import com.bookshop.bookshop.service.UserService;
 import com.bookshop.bookshop.shared.Utils;
 import com.bookshop.bookshop.shared.dto.UserDto;
+import com.bookshop.bookshop.ui.models.response.ErrorMessages;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -32,7 +32,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto createUser(UserDto user) {
         if (userRepository.findByEmail(user.getEmail()) != null) {
-            throw new RecordExistsException("Record already exists");
+            throw new RecordExistsException(ErrorMessages.RECORD_ALREADY_EXISTS.getErrorMessage());
         }
         ModelMapper modelMapper = new ModelMapper();
         UserEntity userEntity = modelMapper.map(user, UserEntity.class);
@@ -59,7 +59,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserByUserId(String userId) {
         UserEntity userEntity = userRepository.findByUserId(userId);
         if (userEntity == null)
-            throw new UserNotFoundException("User with ID: " + userId + " not found");
+            throw new UserNotFoundException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
         ModelMapper modelMapper = new ModelMapper();
         UserDto returnValue = modelMapper.map(userEntity, UserDto.class);
         return returnValue;
@@ -67,7 +67,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(String userId, UserDto user) {
-        return null;
+        ModelMapper modelMapper = new ModelMapper();
+        UserEntity userEntity = userRepository.findByUserId(userId);
+        if (userEntity == null) {
+            throw new UserNotFoundException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+        }
+        userEntity.setFirstName(user.getFirstName());
+        userEntity.setLastName(user.getLastName());
+        UserEntity updatedUserDetails = userRepository.save(userEntity);
+        UserDto returnValue = modelMapper.map(updatedUserDetails, UserDto.class);
+        return returnValue;
     }
 
     @Override
@@ -77,7 +86,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // TODO Auto-generated method stub
         UserEntity userEntity = userRepository.findByEmail(email);
         if (userEntity == null) {
             throw new UserNotFoundException(email);
